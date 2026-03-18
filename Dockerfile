@@ -32,7 +32,7 @@ RUN adduser --disabled-password --gecos '' appuser && \
     chown -R appuser:appuser /app
 
 # Make the wait script executable
-COPY wait-for-it.sh /app/django.sh
+COPY django.sh /app/django.sh
 RUN chmod +x /app/django.sh
 
 USER appuser
