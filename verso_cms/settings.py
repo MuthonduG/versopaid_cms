@@ -1,3 +1,4 @@
+# verso_cms/settings.py
 import os
 from pathlib import Path
 import dj_database_url
@@ -65,17 +66,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'verso_cms.wsgi.application'
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get(
-            'DATABASE_URL',
-            f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
-        ),
-        conn_max_age=600,
-        ssl_require=not DEBUG
-    )
-}
+# Database configuration
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
+if DATABASE_URL:
+    # Use PostgreSQL in production/Docker
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=False  # Set to True only for PostgreSQL with SSL
+        )
+    }
+else:
+    # Use SQLite for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -83,7 +93,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
-
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
