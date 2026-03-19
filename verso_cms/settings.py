@@ -12,12 +12,9 @@ SECRET_KEY = os.environ.get(
     'django-insecure-vari40nmaui)upi9wowfzqs%d6k=6)^*!buh4y7od-bd4m3dfg'
 )
 
-DEBUG = int(os.environ.get('DEBUG', 0))  # default OFF in production
+DEBUG = int(os.environ.get('DEBUG', 0)) 
 
-ALLOWED_HOSTS = os.environ.get(
-    'DJANGO_ALLOWED_HOSTS',
-    'localhost 127.0.0.1'
-).split()
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
@@ -75,11 +72,10 @@ if DATABASE_URL:
         'default': dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
-            ssl_require=False  # Set to True only for PostgreSQL with SSL
+            ssl_require=False  
         )
     }
 else:
-    # Use SQLite for local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
