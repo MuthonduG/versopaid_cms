@@ -30,11 +30,13 @@ INSTALLED_APPS = [
 
     'whitenoise.runserver_nostatic',
 
+    'corsheaders',
     'rest_framework',
     'waitlist',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
@@ -45,6 +47,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# CORS: allow browser-based frontend to call this API.
+# Keep origins explicit (and credential-aware) rather than using a global allow-all in production.
+_cors_origins_raw = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
+CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_raw.split(',') if o.strip()]
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'verso_cms.urls'
 
