@@ -1,7 +1,9 @@
 # verso_cms/settings.py
 import os
 from pathlib import Path
-import dj_database_url
+import firebase_admin
+from firebase_admin import credentials, firestore
+import re
 
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -12,12 +14,9 @@ SECRET_KEY = os.environ.get(
     'django-insecure-vari40nmaui)upi9wowfzqs%d6k=6)^*!buh4y7od-bd4m3dfg'
 )
 
-DEBUG = int(os.environ.get('DEBUG', 0))  # default OFF in production
+DEBUG = int(os.environ.get('DEBUG', 1))  # Default to 1 for development
 
-ALLOWED_HOSTS = os.environ.get(
-    'DJANGO_ALLOWED_HOSTS',
-    'localhost 127.0.0.1'
-).split()
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
@@ -49,9 +48,14 @@ MIDDLEWARE = [
 ]
 
 # CORS: allow browser-based frontend to call this API.
-# Keep origins explicit (and credential-aware) rather than using a global allow-all in production.
-_cors_origins_raw = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
-CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_raw.split(',') if o.strip()]
+# Accept comma/space/newline-separated env values to avoid deploy-time formatting issues.
+_cors_origins_raw = os.environ.get(
+    'CORS_ALLOWED_ORIGINS',
+    'http://localhost:5173,http://127.0.0.1:5173,https://www.versopaid.tech,https://versopaid.tech'
+)
+CORS_ALLOWED_ORIGINS = [
+    origin for origin in re.split(r'[\s,]+', _cors_origins_raw.strip()) if origin
+]
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'verso_cms.urls'
@@ -74,26 +78,33 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'verso_cms.wsgi.application'
 
-# Database configuration
-DATABASE_URL = os.environ.get('DATABASE_URL')
+# Firebase Configuration
+FIREBASE_CREDENTIALS_PATH = os.environ.get(
+    'FIREBASE_CREDENTIALS_PATH', 
+    BASE_DIR / 'firebase-credentials.json'
+)
 
-if DATABASE_URL:
-    # Use PostgreSQL in production/Docker
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=False  # Set to True only for PostgreSQL with SSL
-        )
-    }
-else:
-    # Use SQLite for local development
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+# Initialize Firebase
+try:
+    cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
+    firebase_admin.initialize_app(cred)
+    db = firestore.client()
+    FIRESTORE_CLIENT = db
+    FIREBASE_INITIALIZED = True
+    print("✅ Firebase initialized successfully")
+except Exception as e:
+    print(f"Firebase initialization failed: {e}")
+    FIRESTORE_CLIENT = None
+    FIREBASE_INITIALIZED = False
+
+# We no longer need the database configuration
+# Comment out or remove the DATABASES section
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
