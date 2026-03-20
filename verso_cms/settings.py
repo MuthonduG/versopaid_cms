@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import firebase_admin
 from firebase_admin import credentials, firestore
+import re
 
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,11 +29,13 @@ INSTALLED_APPS = [
 
     'whitenoise.runserver_nostatic',
 
+    'corsheaders',
     'rest_framework',
     'waitlist',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
@@ -43,6 +46,17 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# CORS: allow browser-based frontend to call this API.
+# Accept comma/space/newline-separated env values to avoid deploy-time formatting issues.
+_cors_origins_raw = os.environ.get(
+    'CORS_ALLOWED_ORIGINS',
+    'http://localhost:5173,http://127.0.0.1:5173,https://www.versopaid.tech,https://versopaid.tech'
+)
+CORS_ALLOWED_ORIGINS = [
+    origin for origin in re.split(r'[\s,]+', _cors_origins_raw.strip()) if origin
+]
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'verso_cms.urls'
 
